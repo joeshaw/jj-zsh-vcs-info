@@ -1,0 +1,26 @@
+setopt localoptions NO_shwordsplit
+local action branch base staged unstaged revision misc
+local info change commit bookmarks empty conflict divergent hidden
+
+function jj_status
+{
+	jj log -r@ -n1 --quiet --no-pager --no-graph --ignore-working-copy \
+	    --color never \
+		-T 'separate("\n",
+		    "change=" ++ self.change_id().shortest(8),
+			"commit=" ++ self.commit_id().shortest(8),
+			"bookmarks=" ++ self.local_bookmarks(),
+			"divergent=" ++ if(divergent, "divergent"),
+			"hidden=" ++ if(hidden, "hidden"),
+			"conflict=" ++ if(conflict, "conflict"),
+			"empty=" ++ if(empty, "empty"),
+			"root=" ++ if(root, "root"),
+		)' 2>/dev/null
+}
+
+eval $(jj_status)
+action=($divergent $hidden $conflict $empty $root)
+branch="${bookmarks}"
+revision="${change} ${commit}"
+
+VCS_INFO_formats "${action}" "${branch}" "${base}" "${staged}" "${unstaged}" "${revision}" "${misc}"
